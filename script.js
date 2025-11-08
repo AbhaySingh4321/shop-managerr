@@ -1,4 +1,4 @@
-// Iinitialize Supabase client from supabase-config.js
+// Initialize Supabase client from supabase-config.js
 // supabase is already defined globally
 
 const LOW_STOCK_THRESHOLD = 50;
