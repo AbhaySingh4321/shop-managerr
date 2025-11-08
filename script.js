@@ -125,7 +125,7 @@ function startRealtimeListeners() {
     )
     .subscribe();
 
-  let salesSub = window.supabase
+  let salesSub = supabase
     .channel('public:sales')
     .on(
       'postgres_changes',
@@ -156,7 +156,7 @@ function startRealtimeListeners() {
 }
 
 function cleanupRealtimeListeners() {
-  appData.unsubscribes.forEach(sub => window.supabase.removeChannel(sub));
+  appData.unsubscribes.forEach(sub => supabase.removeChannel(sub));
   appData.unsubscribes = [];
 }
 
@@ -305,8 +305,8 @@ async function handleRecordSale(event) {
   }
 
   try {
-    await window.supabase.from('products').update({ stock: product.stock - quantity }).eq('id', productId);
-    await window.supabase.from('sales').insert([{ customer_name: customerName, product_id: productId, quantity }]);
+    await supabase.from('products').update({ stock: product.stock - quantity }).eq('id', productId);
+    await supabase.from('sales').insert([{ customer_name: customerName, product_id: productId, quantity }]);
 
     document.getElementById('saleError').textContent = '';
     document.getElementById('saleSuccess').textContent = `✓ Sale recorded!`;
@@ -354,7 +354,7 @@ async function deleteSale(id, productId, quantity) {
     // Restore stock first
     const product = appData.products.find(p => p.id === productId);
     const newStock = (product?.stock || 0) + quantity;
-    await window.supabase.from('products').update({ stock: newStock }).eq('id', productId);
+    await supabase.from('products').update({ stock: newStock }).eq('id', productId);
 
     // Delete sale record
     await supabase.from('sales').delete().eq('id', id);
