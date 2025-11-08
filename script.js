@@ -96,7 +96,7 @@ async function handleLogin(event) {
     document.getElementById('loginError').textContent = 'Please enter email and password.';
     return;
   }
-  const { error } = await window.supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     document.getElementById('loginError').textContent = 'Login failed: ' + error.message;
   } else {
