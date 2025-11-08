@@ -300,6 +300,7 @@ body {
 /* Tables */
 
 .table {
+  table-layout: auto;
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
@@ -313,11 +314,16 @@ body {
 .table th {
   padding: 15px;
   text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
   font-weight: 600;
 }
 
 .table td {
   padding: 12px 15px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
   border-bottom: 1px solid #e0e0e0;
 }
 
