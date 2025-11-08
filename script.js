@@ -293,7 +293,7 @@ async function handleRecordSale(event) {
     return;
   }
 
-  const product = appData.products.find(p => p.id === productId);
+  const product = appData.products.find(p => String(p.id) === String(productId));
   if (!product) {
     document.getElementById('saleError').textContent = 'Selected product not found.';
     return;
@@ -390,7 +390,7 @@ async function handleAddStock(event) {
     return;
   }
 
-  const product = appData.products.find(p => p.id === productId);
+  const product = appData.products.find(p => String(p.id) === String(productId));
   if (!product) {
     alert('Selected product not found.');
     return;
