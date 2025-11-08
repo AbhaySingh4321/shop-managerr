@@ -41,7 +41,7 @@ function setupAuthListener() {
   });
 
   // Also check current session on load
-  window.supabase.auth.getSession().then(({ data: { session } }) => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
     if (session && session.user) {
       appData.user = session.user;
       showDashboardPage();
@@ -106,7 +106,7 @@ async function handleLogin(event) {
 }
 
 function logout() {
-  window.supabase.auth.signOut();
+  supabase.auth.signOut();
 }
 
 // ============ Realtime Listeners ============
