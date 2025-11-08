@@ -28,7 +28,7 @@ function setupEventListeners() {
 }
 
 function setupAuthListener() {
-  supabase.auth.onAuthStateChange((event, session) => {
+  window.supabase.auth.onAuthStateChange((event, session) => {
     if (session && session.user) {
       appData.user = session.user;
       showDashboardPage();
@@ -41,7 +41,7 @@ function setupAuthListener() {
   });
 
   // Also check current session on load
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  window.supabase.auth.getSession().then(({ data: { session } }) => {
     if (session && session.user) {
       appData.user = session.user;
       showDashboardPage();
@@ -96,7 +96,7 @@ async function handleLogin(event) {
     document.getElementById('loginError').textContent = 'Please enter email and password.';
     return;
   }
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await window.supabase.auth.signInWithPassword({ email, password });
   if (error) {
     document.getElementById('loginError').textContent = 'Login failed: ' + error.message;
   } else {
@@ -106,7 +106,7 @@ async function handleLogin(event) {
 }
 
 function logout() {
-  supabase.auth.signOut();
+  window.supabase.auth.signOut();
 }
 
 // ============ Realtime Listeners ============
@@ -114,7 +114,7 @@ function logout() {
 function startRealtimeListeners() {
   cleanupRealtimeListeners();
 
-  let productsSub = supabase
+  let productsSub = window.supabase
     .channel('public:products')
     .on(
       'postgres_changes',
@@ -125,7 +125,7 @@ function startRealtimeListeners() {
     )
     .subscribe();
 
-  let salesSub = supabase
+  let salesSub = window.supabase
     .channel('public:sales')
     .on(
       'postgres_changes',
@@ -136,7 +136,7 @@ function startRealtimeListeners() {
     )
     .subscribe();
 
-  let restockSub = supabase
+  let restockSub = window.supabase
     .channel('public:restock')
     .on(
       'postgres_changes',
@@ -156,14 +156,14 @@ function startRealtimeListeners() {
 }
 
 function cleanupRealtimeListeners() {
-  appData.unsubscribes.forEach(sub => supabase.removeChannel(sub));
+  appData.unsubscribes.forEach(sub => window.supabase.removeChannel(sub));
   appData.unsubscribes = [];
 }
 
 // ============ Data Fetching ============
 
 async function fetchProducts() {
-  const { data, error } = await supabase.from('products').select('*').order('name');
+  const { data, error } = await window.supabase.from('products').select('*').order('name');
   if (error) alert('Failed to load products: ' + error.message);
   else {
     appData.products = data;
@@ -175,7 +175,7 @@ async function fetchProducts() {
 }
 
 async function fetchSales() {
-  const { data, error } = await supabase.from('sales').select('*').order('timestamp', { ascending: false });
+  const { data, error } = await window.supabase.from('sales').select('*').order('timestamp', { ascending: false });
   if (error) alert('Failed to load sales: ' + error.message);
   else {
     appData.sales = data;
@@ -185,7 +185,7 @@ async function fetchSales() {
 }
 
 async function fetchRestocks() {
-  const { data, error } = await supabase.from('restock').select('*').order('timestamp', { ascending: false });
+  const { data, error } = await window.supabase.from('restock').select('*').order('timestamp', { ascending: false });
   if (error) alert('Failed to load restocks: ' + error.message);
   else {
     appData.restock = data;
@@ -247,7 +247,7 @@ async function handleAddProduct(event) {
     return;
   }
 
-  const { error } = await supabase.from('products').insert([{ name, stock, unit, price }]);
+  const { error } = await window.supabase.from('products').insert([{ name, stock, unit, price }]);
   if (error) alert('Failed to add product: ' + error.message);
   else {
     document.getElementById('addProductMsg').textContent = '✓ Product added!';
@@ -264,7 +264,7 @@ function confirmDeleteProduct(id, name) {
 }
 
 async function deleteProduct(id, name) {
-  const { error } = await supabase.from('products').delete().eq('id', id);
+  const { error } = await window.supabase.from('products').delete().eq('id', id);
   if (error) alert('Failed to delete product: ' + error.message);
   else alert(`Product "${name}" deleted!`);
 }
@@ -305,8 +305,8 @@ async function handleRecordSale(event) {
   }
 
   try {
-    await supabase.from('products').update({ stock: product.stock - quantity }).eq('id', productId);
-    await supabase.from('sales').insert([{ customer_name: customerName, product_id: productId, quantity }]);
+    await window.supabase.from('products').update({ stock: product.stock - quantity }).eq('id', productId);
+    await window.supabase.from('sales').insert([{ customer_name: customerName, product_id: productId, quantity }]);
 
     document.getElementById('saleError').textContent = '';
     document.getElementById('saleSuccess').textContent = `✓ Sale recorded!`;
@@ -354,10 +354,10 @@ async function deleteSale(id, productId, quantity) {
     // Restore stock first
     const product = appData.products.find(p => p.id === productId);
     const newStock = (product?.stock || 0) + quantity;
-    await supabase.from('products').update({ stock: newStock }).eq('id', productId);
+    await window.supabase.from('products').update({ stock: newStock }).eq('id', productId);
 
     // Delete sale record
-    await supabase.from('sales').delete().eq('id', id);
+    await window.supabase.from('sales').delete().eq('id', id);
 
     alert('Sale deleted and stock restored.');
   } catch (e) {
@@ -397,8 +397,8 @@ async function handleAddStock(event) {
   }
 
   try {
-    await supabase.from('products').update({ stock: product.stock + quantity }).eq('id', productId);
-    await supabase.from('restock').insert([{ supplier_name: supplierName, product_id: productId, quantity, notes }]);
+    await window.supabase.from('products').update({ stock: product.stock + quantity }).eq('id', productId);
+    await window.supabase.from('restock').insert([{ supplier_name: supplierName, product_id: productId, quantity, notes }]);
 
     document.getElementById('restockSuccess').textContent = '✓ Stock added!';
     event.target.reset();
