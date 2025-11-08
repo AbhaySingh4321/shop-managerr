@@ -427,10 +427,35 @@ function refreshRestockHistory() {
       <td>${restock.quantity}</td>
       <td>${date}</td>
       <td>${restock.notes || '-'}</td>
+      <td>
+        <button class="btn btn-danger" onclick="confirmDeleteRestock('${restock.id}', '${restock.product_id}', ${restock.quantity})">Delete</button>
+      </td>
     `;
     table.appendChild(row);
   });
 }
+function confirmDeleteRestock(id, productId, quantity) {
+  pendingAction = () => deleteRestock(id, productId, quantity);
+  showConfirmModal('Delete Restock', 
+    `Are you sure you want to delete this restock entry? This will reduce the product stock by the restock amount.`);
+}
+
+async function deleteRestock(id, productId, quantity) {
+  try {
+    // Reduce product stock
+    const product = appData.products.find(p => p.id == productId);
+    if (product) {
+      const newStock = Math.max(0, product.stock - quantity);
+      await supabase.from('products').update({ stock: newStock }).eq('id', productId);
+    }
+    // Delete the restock entry itself
+    await supabase.from('restock').delete().eq('id', id);
+    alert('Restock deleted and stock adjusted.');
+  } catch (e) {
+    alert('Failed to delete restock: ' + e.message);
+  }
+}
+
 
 // ============ Confirmation Modal ============
 
