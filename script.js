@@ -114,7 +114,7 @@ function logout() {
 function startRealtimeListeners() {
   cleanupRealtimeListeners();
 
-  let productsSub = window.supabase
+  let productsSub = supabase
     .channel('public:products')
     .on(
       'postgres_changes',
@@ -136,7 +136,7 @@ function startRealtimeListeners() {
     )
     .subscribe();
 
-  let restockSub = window.supabase
+  let restockSub = supabase
     .channel('public:restock')
     .on(
       'postgres_changes',
@@ -163,7 +163,7 @@ function cleanupRealtimeListeners() {
 // ============ Data Fetching ============
 
 async function fetchProducts() {
-  const { data, error } = await window.supabase.from('products').select('*').order('name');
+  const { data, error } = await supabase.from('products').select('*').order('name');
   if (error) alert('Failed to load products: ' + error.message);
   else {
     appData.products = data;
@@ -175,7 +175,7 @@ async function fetchProducts() {
 }
 
 async function fetchSales() {
-  const { data, error } = await window.supabase.from('sales').select('*').order('timestamp', { ascending: false });
+  const { data, error } = await supabase.from('sales').select('*').order('timestamp', { ascending: false });
   if (error) alert('Failed to load sales: ' + error.message);
   else {
     appData.sales = data;
@@ -185,7 +185,7 @@ async function fetchSales() {
 }
 
 async function fetchRestocks() {
-  const { data, error } = await window.supabase.from('restock').select('*').order('timestamp', { ascending: false });
+  const { data, error } = await supabase.from('restock').select('*').order('timestamp', { ascending: false });
   if (error) alert('Failed to load restocks: ' + error.message);
   else {
     appData.restock = data;
@@ -247,7 +247,7 @@ async function handleAddProduct(event) {
     return;
   }
 
-  const { error } = await window.supabase.from('products').insert([{ name, stock, unit, price }]);
+  const { error } = await supabase.from('products').insert([{ name, stock, unit, price }]);
   if (error) alert('Failed to add product: ' + error.message);
   else {
     document.getElementById('addProductMsg').textContent = '✓ Product added!';
@@ -264,7 +264,7 @@ function confirmDeleteProduct(id, name) {
 }
 
 async function deleteProduct(id, name) {
-  const { error } = await window.supabase.from('products').delete().eq('id', id);
+  const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) alert('Failed to delete product: ' + error.message);
   else alert(`Product "${name}" deleted!`);
 }
@@ -357,7 +357,7 @@ async function deleteSale(id, productId, quantity) {
     await window.supabase.from('products').update({ stock: newStock }).eq('id', productId);
 
     // Delete sale record
-    await window.supabase.from('sales').delete().eq('id', id);
+    await supabase.from('sales').delete().eq('id', id);
 
     alert('Sale deleted and stock restored.');
   } catch (e) {
@@ -397,8 +397,8 @@ async function handleAddStock(event) {
   }
 
   try {
-    await window.supabase.from('products').update({ stock: product.stock + quantity }).eq('id', productId);
-    await window.supabase.from('restock').insert([{ supplier_name: supplierName, product_id: productId, quantity, notes }]);
+    await supabase.from('products').update({ stock: product.stock + quantity }).eq('id', productId);
+    await supabase.from('restock').insert([{ supplier_name: supplierName, product_id: productId, quantity, notes }]);
 
     document.getElementById('restockSuccess').textContent = '✓ Stock added!';
     event.target.reset();
