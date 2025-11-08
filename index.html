@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Stock Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loginContainer" class="container">
+        <div class="login-box">
+            <h1>Shop Stock Manager</h1>
+            <p class="subtitle">Inventory Management System</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="admin123" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="error-msg" id="loginError"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboardContainer" class="container" style="display: none;">
+        <nav class="navbar">
+            <h1>🛍️ Shop Stock Manager</h1>
+            <ul class="nav-menu">
+                <li><button onclick="showDashboard()" class="nav-btn active" id="nav-dashboard">Dashboard</button></li>
+                <li><button onclick="showInventory()" class="nav-btn" id="nav-inventory">Manage Inventory</button></li>
+                <li><button onclick="showRecordSale()" class="nav-btn" id="nav-sale">Record Sale</button></li>
+                <li><button onclick="showAddStock()" class="nav-btn" id="nav-restock">Add Stock</button></li>
+                <li><button onclick="showSalesHistory()" class="nav-btn" id="nav-history">Sales History</button></li>
+                <li><button onclick="showRestockHistory()" class="nav-btn" id="nav-restock-history">Restock History</button></li>
+                <li><button onclick="logout()" class="nav-btn logout">Logout</button></li>
+            </ul>
+        </nav>
+
+        <div id="dashboardView" class="view">
+            <h2>Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <p class="stat-value" id="totalProducts">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Sales</h3>
+                    <p class="stat-value" id="totalSales">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Restock</h3>
+                    <p class="stat-value" id="totalRestock">0</p>
+                </div>
+                <div class="stat-card alert">
+                    <h3>Low Stock Alert</h3>
+                    <p class="stat-value" id="lowStockCount">0</p>
+                </div>
+            </div>
+            <h3>Low Stock Products</h3>
+            <table class="table" id="lowStockTable">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Current Stock</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody id="lowStockBody"></tbody>
+            </table>
+        </div>
+
+        <div id="inventoryView" class="view" style="display: none;">
+            <h2>Manage Inventory</h2>
+            <div class="form-section">
+                <h3>Add New Product</h3>
+                <form id="addProductForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName">Product Name</label>
+                            <input type="text" id="productName" placeholder="e.g., Rice" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productStock">Initial Stock</label>
+                            <input type="number" id="productStock" placeholder="0" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productUnit">Unit</label>
+                            <input type="text" id="productUnit" placeholder="e.g., kg, pieces" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Price (Optional)</label>
+                            <input type="number" id="productPrice" placeholder="0" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                    <p class="success-msg" id="addProductMsg"></p>
+                </form>
+            </div>
+            <h3>Current Inventory</h3>
+            <table class="table" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Stock</th>
+                        <th>Unit</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryBody"></tbody>
+            </table>
+        </div>
+
+        <div id="recordSaleView" class="view" style="display: none;">
+            <h2>Record Sale</h2>
+            <div class="form-section">
+                <form id="recordSaleForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerName">Customer Name</label>
+                            <input type="text" id="customerName" placeholder="Enter customer name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="saleProduct">Product</label>
+                            <select id="saleProduct" required>
+                                <option value="">Select a product</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="saleQuantity">Quantity</label>
+                            <input type="number" id="saleQuantity" placeholder="0" min="1" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Record Sale</button>
+                    <p class="error-msg" id="saleError"></p>
+                    <p class="success-msg" id="saleSuccess"></p>
+                </form>
+            </div>
+        </div>
+
+        <div id="addStockView" class="view" style="display: none;">
+            <h2>Add/Restock Inventory</h2>
+            <div class="form-section">
+                <form id="addStockForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplierName">Supplier Name</label>
+                            <input type="text" id="supplierName" placeholder="Enter supplier name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="restockProduct">Product</label>
+                            <select id="restockProduct" required>
+                                <option value="">Select a product</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="restockQuantity">Quantity to Add</label>
+                            <input type="number" id="restockQuantity" placeholder="0" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="restockNotes">Notes (Optional)</label>
+                        <textarea id="restockNotes" placeholder="Add any notes..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Restock</button>
+                    <p class="success-msg" id="restockSuccess"></p>
+                </form>
+            </div>
+        </div>
+
+        <div id="salesHistoryView" class="view" style="display: none;">
+            <h2>Sales History</h2>
+            <table class="table" id="salesHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Date & Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="salesHistoryBody"></tbody>
+            </table>
+        </div>
+
+        <div id="restockHistoryView" class="view" style="display: none;">
+            <h2>Restock History</h2>
+            <table class="table" id="restockHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Date & Time</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="restockHistoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="confirmTitle">Confirm Action</h2>
+            <p id="confirmMessage"></p>
+            <div class="modal-buttons">
+                <button onclick="confirmAction()" class="btn btn-danger">Delete</button>
+                <button onclick="cancelAction()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
