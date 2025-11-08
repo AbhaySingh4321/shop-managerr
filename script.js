@@ -228,7 +228,7 @@ function refreshInventory() {
       <td>${product.name}</td>
       <td>${product.stock}</td>
       <td>${product.unit}</td>
-      <td>$${product.price?.toFixed(2) || '0.00'}</td>
+      <td>₹${product.price?.toFixed(2) || '0.00'}</td>
       <td><button class="btn btn-danger" onclick="confirmDeleteProduct('${product.id}', '${product.name}')">Delete</button></td>
     `;
     table.appendChild(row);
