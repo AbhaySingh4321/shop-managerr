@@ -28,7 +28,7 @@ function setupEventListeners() {
 }
 
 function setupAuthListener() {
-  window.supabase.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
     if (session && session.user) {
       appData.user = session.user;
       showDashboardPage();
