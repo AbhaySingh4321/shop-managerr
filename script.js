@@ -286,67 +286,175 @@ function refreshSaleForm() {
   });
 }
 
-async function handleRecordSale(event) {
-  event.preventDefault();
-  const customerName = document.getElementById('customerName').value.trim();
+// NEW: Multi-item sale logic and complete sale handler
+
+let currentSaleItems = [];
+
+function addItemToSale() {
   const productId = document.getElementById('saleProduct').value;
   const quantity = parseInt(document.getElementById('saleQuantity').value);
 
-  if (!customerName || !productId || quantity <= 0) {
-    document.getElementById('saleError').textContent = 'Please fill all fields correctly.';
+  if (!productId || quantity <= 0) {
+    alert('Please select product and enter quantity');
     return;
   }
 
-  const product = appData.products.find(p => String(p.id) === String(productId));
+  const product = appData.products.find(p => p.id == productId);
   if (!product) {
-    document.getElementById('saleError').textContent = 'Selected product not found.';
+    alert('Product not found');
     return;
   }
 
   if (product.stock < quantity) {
-    document.getElementById('saleError').textContent = `Insufficient stock! Available: ${product.stock}`;
+    alert(`Insufficient stock! Available: ${product.stock}`);
+    return;
+  }
+
+  // Check if item already in cart
+  const existingItem = currentSaleItems.find(item => item.product_id == productId);
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    currentSaleItems.push({
+      product_id: productId,
+      product_name: product.name,
+      quantity
+    });
+  }
+
+  // Reset input fields
+  document.getElementById('saleProduct').value = '';
+  document.getElementById('saleQuantity').value = '';
+
+  refreshSaleItems();
+}
+
+function removeSaleItem(productId) {
+  currentSaleItems = currentSaleItems.filter(item => item.product_id != productId);
+  refreshSaleItems();
+}
+
+function refreshSaleItems() {
+  const table = document.getElementById('saleItemsTable');
+  table.innerHTML = '';
+  currentSaleItems.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.product_name}</td>
+      <td>${item.quantity}</td>
+      <td><button class="btn btn-danger" onclick="removeSaleItem('${item.product_id}')">Remove</button></td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+async function handleRecordSale(event) {
+  event.preventDefault();
+  const customerName = document.getElementById('customerName').value.trim();
+
+  if (!customerName) {
+    document.getElementById('saleError').textContent = 'Please enter customer name';
+    return;
+  }
+
+  if (currentSaleItems.length === 0) {
+    document.getElementById('saleError').textContent = 'Please add at least one item';
     return;
   }
 
   try {
-    await supabase.from('products').update({ stock: product.stock - quantity }).eq('id', productId);
-    await supabase.from('sales').insert([{ customer_name: customerName, product_id: productId, quantity }]);
+    for (const item of currentSaleItems) {
+      const product = appData.products.find(p => p.id == item.product_id);
+      if (!product) continue;
+
+      await supabase.from('products').update({ stock: product.stock - item.quantity }).eq('id', item.product_id);
+
+      await supabase.from('sales').insert([{
+        customer_name: customerName,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        timestamp: new Date().toISOString()
+      }]);
+    }
 
     document.getElementById('saleError').textContent = '';
-    document.getElementById('saleSuccess').textContent = `✓ Sale recorded!`;
-    event.target.reset();
-    refreshSaleForm();
+    document.getElementById('saleSuccess').textContent = `✓ Sale completed for ${currentSaleItems.length} item(s)!`;
+
+    currentSaleItems = [];
+    refreshSaleItems();
+    document.getElementById('recordSaleForm').reset();
+    document.getElementById('customerName').value = '';
 
     setTimeout(() => {
       document.getElementById('saleSuccess').textContent = '';
     }, 3000);
   } catch (e) {
-    document.getElementById('saleError').textContent = 'Error recording sale: ' + e.message;
+    document.getElementById('saleError').textContent = 'Error: ' + e.message;
   }
 }
 
 // ============ Sales History ============
 
-function refreshSalesHistory() {
+function renderSalesTable(sales) {
   const table = document.getElementById('salesHistoryTable');
   table.innerHTML = '';
-  appData.sales.forEach(sale => {
+  sales.forEach(sale => {
     const date = sale.timestamp ? formatIST(sale.timestamp) : 'N/A';
-    const row = document.createElement('tr');
-
-    const product = appData.products.find(p => p.id === sale.product_id);
+    const product = appData.products.find(p => p.id == sale.product_id);
     const productName = product ? product.name : 'Unknown';
 
+    const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${sale.customer_name}</td>
-      <td>${productName}</td>
-      <td>${sale.quantity}</td>
-      <td>${date}</td>
-      <td><button class="btn btn-danger" onclick="confirmDeleteSale('${sale.id}', '${sale.product_id}', ${sale.quantity})">Delete</button></td>
+      <td data-label="Customer">${sale.customer_name}</td>
+      <td data-label="Product">${productName}</td>
+      <td data-label="Qty">${sale.quantity}</td>
+      <td data-label="Date & Time">${date}</td>
+      <td data-label="Action" class="actions">
+        <button class="btn btn-danger" onclick="confirmDeleteSale('${sale.id}', '${sale.product_id}', ${sale.quantity})">Delete</button>
+      </td>
     `;
     table.appendChild(row);
   });
 }
+
+function refreshSalesHistory() {
+  renderSalesTable(appData.sales);
+}
+
+// Filtering
+async function filterSalesHistory() {
+  const searchText = document.getElementById('searchCustomer').value.toLowerCase();
+  const fromDate = document.getElementById('searchFromDate').value;
+  const toDate = document.getElementById('searchToDate').value;
+  let filtered = appData.sales;
+
+  if (searchText) {
+    filtered = filtered.filter(sale => {
+      const product = appData.products.find(p => p.id == sale.product_id);
+      const productName = product ? product.name.toLowerCase() : '';
+      return sale.customer_name.toLowerCase().includes(searchText) || productName.includes(searchText);
+    });
+  }
+
+  if (fromDate || toDate) {
+    const from = fromDate ? new Date(fromDate + 'T00:00:00Z').getTime() : 0;
+    const to = toDate ? new Date(toDate + 'T23:59:59Z').getTime() : Date.now();
+    filtered = filtered.filter(sale => {
+      const saleTime = new Date(sale.timestamp).getTime();
+      return saleTime >= from && saleTime <= to;
+    });
+  }
+
+  renderSalesTable(filtered);
+}
+
+function resetSalesFilter() {
+  document.getElementById('searchCustomer').value = '';
+  document.getElementById('searchFromDate').value = '';
+  document.getElementById('searchToDate').value = '';
+  refreshSalesHistory();
+}
+
 
 function confirmDeleteSale(id, productId, quantity) {
   pendingAction = () => deleteSale(id, productId, quantity);
@@ -415,29 +523,67 @@ async function handleAddStock(event) {
   }
 }
 
-function refreshRestockHistory() {
+function renderRestockTable(restocks) {
   const table = document.getElementById('restockHistoryTable');
   table.innerHTML = '';
-  appData.restock.forEach(restock => {
+  restocks.forEach(restock => {
     const date = restock.timestamp ? formatIST(restock.timestamp) : 'N/A';
-    const row = document.createElement('tr');
-
-    const product = appData.products.find(p => p.id === restock.product_id);
+    const product = appData.products.find(p => p.id == restock.product_id);
     const productName = product ? product.name : 'Unknown';
 
+    const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${restock.supplier_name}</td>
-      <td>${productName}</td>
-      <td>${restock.quantity}</td>
-      <td>${date}</td>
-      <td>${restock.notes || '-'}</td>
-      <td>
+      <td data-label="Supplier">${restock.supplier_name}</td>
+      <td data-label="Product">${productName}</td>
+      <td data-label="Qty">${restock.quantity}</td>
+      <td data-label="Date & Time">${date}</td>
+      <td data-label="Notes">${restock.notes || '-'}</td>
+      <td data-label="Action" class="actions">
         <button class="btn btn-danger" onclick="confirmDeleteRestock('${restock.id}', '${restock.product_id}', ${restock.quantity})">Delete</button>
       </td>
     `;
     table.appendChild(row);
   });
 }
+
+function refreshRestockHistory() {
+  renderRestockTable(appData.restock);
+}
+
+async function filterRestockHistory() {
+  const searchText = document.getElementById('searchSupplier').value.toLowerCase();
+  const fromDate = document.getElementById('restockFromDate').value;
+  const toDate = document.getElementById('restockToDate').value;
+
+  let filtered = appData.restock;
+
+  if (searchText) {
+    filtered = filtered.filter(restock => {
+      const product = appData.products.find(p => p.id == restock.product_id);
+      const productName = product ? product.name.toLowerCase() : '';
+      return restock.supplier_name.toLowerCase().includes(searchText) || productName.includes(searchText);
+    });
+  }
+
+  if (fromDate || toDate) {
+    const from = fromDate ? new Date(fromDate + 'T00:00:00Z').getTime() : 0;
+    const to = toDate ? new Date(toDate + 'T23:59:59Z').getTime() : Date.now();
+    filtered = filtered.filter(restock => {
+      const restockTime = new Date(restock.timestamp).getTime();
+      return restockTime >= from && restockTime <= to;
+    });
+  }
+
+  renderRestockTable(filtered);
+}
+
+function resetRestockFilter() {
+  document.getElementById('searchSupplier').value = '';
+  document.getElementById('restockFromDate').value = '';
+  document.getElementById('restockToDate').value = '';
+  refreshRestockHistory();
+}
+
 function confirmDeleteRestock(id, productId, quantity) {
   pendingAction = () => deleteRestock(id, productId, quantity);
   showConfirmModal('Delete Restock', 
