@@ -12,6 +12,9 @@ let appData = {
 };
 
 let pendingAction = null;
+function formatIST(isoString) {
+  return new Date(isoString).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+}
 
 // ============ Initialization ============
 
@@ -327,7 +330,7 @@ function refreshSalesHistory() {
   const table = document.getElementById('salesHistoryTable');
   table.innerHTML = '';
   appData.sales.forEach(sale => {
-    const date = sale.timestamp ? new Date(sale.timestamp).toLocaleString() : 'N/A';
+    const date = sale.timestamp ? formatIST(sale.timestamp) : 'N/A';
     const row = document.createElement('tr');
 
     const product = appData.products.find(p => p.id === sale.product_id);
@@ -415,7 +418,7 @@ function refreshRestockHistory() {
   const table = document.getElementById('restockHistoryTable');
   table.innerHTML = '';
   appData.restock.forEach(restock => {
-    const date = restock.timestamp ? new Date(restock.timestamp).toLocaleString() : 'N/A';
+    const date = restock.timestamp ? formatIST(restock.timestamp) : 'N/A';
     const row = document.createElement('tr');
 
     const product = appData.products.find(p => p.id === restock.product_id);
