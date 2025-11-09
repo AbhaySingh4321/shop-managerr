@@ -13,6 +13,7 @@ let appData = {
 
 let pendingAction = null;
 function formatIST(isoString) {
+  if (!isoString) return 'N/A';
   return new Date(isoString).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 }
 
