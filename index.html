@@ -122,32 +122,57 @@
     </div>
 
     <!-- Record Sale Section -->
-    <div id="sale-section" class="section" style="display: none;">
-      <h2>Record Sale</h2>
-      <div class="form-section">
-        <form id="recordSaleForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="customerName">Customer Name</label>
-              <input type="text" id="customerName" placeholder="Enter customer name" required />
-            </div>
-            <div class="form-group">
-              <label for="saleProduct">Product</label>
-              <select id="saleProduct" required>
-                <option value="">Select product</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="saleQuantity">Quantity</label>
-              <input type="number" id="saleQuantity" placeholder="0" min="1" required />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary">Record Sale</button>
-          <p class="error-msg" id="saleError"></p>
-          <p class="success-msg" id="saleSuccess"></p>
-        </form>
+    <!-- Record Sale Section -->
+<div id="sale-section" class="section" style="display: none;">
+  <h2>Record Sale</h2>
+  <div class="form-section">
+    <h3>Add Items to Sale</h3>
+    <form id="singleItemForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="saleProduct">Product</label>
+          <select id="saleProduct" required>
+            <option value="">Select product</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="saleQuantity">Quantity</label>
+          <input type="number" id="saleQuantity" placeholder="0" min="1" required />
+        </div>
       </div>
-    </div>
+      <button type="button" class="btn btn-primary" onclick="addItemToSale()">Add Item</button>
+    </form>
+  </div>
+
+  <!-- Items in current sale -->
+  <div class="form-section">
+    <h3>Items in This Sale</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="saleItemsTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Customer and submit -->
+  <div class="form-section">
+    <form id="recordSaleForm">
+      <div class="form-group">
+        <label for="customerName">Customer Name</label>
+        <input type="text" id="customerName" placeholder="Enter customer name" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Complete Sale</button>
+      <p class="error-msg" id="saleError"></p>
+      <p class="success-msg" id="saleSuccess"></p>
+    </form>
+  </div>
+</div>
+
 
     <!-- Add Stock Section -->
     <div id="restock-section" class="section" style="display: none;">
@@ -181,39 +206,89 @@
     </div>
 
     <!-- Sales History Section -->
-    <div id="sales-history-section" class="section" style="display: none;">
-      <h2>Sales History</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Date & Time</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="salesHistoryTable"></tbody>
-      </table>
+    <!-- Sales History Section -->
+<div id="sales-history-section" class="section" style="display: none;">
+  <h2>Sales History</h2>
+  
+  <div class="form-section">
+    <h3>Search & Filter</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="searchCustomer">Search by Customer/Product</label>
+        <input type="text" id="searchCustomer" placeholder="Enter customer or product name" />
+      </div>
+      <div class="form-group">
+        <label for="searchFromDate">From Date</label>
+        <input type="date" id="searchFromDate" />
+      </div>
+      <div class="form-group">
+        <label for="searchToDate">To Date</label>
+        <input type="date" id="searchToDate" />
+      </div>
     </div>
+    <button class="btn btn-primary" onclick="filterSalesHistory()">Search</button>
+    <button class="btn btn-secondary" onclick="resetSalesFilter()">Reset</button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Date & Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="salesHistoryTable"></tbody>
+    </table>
+  </div>
+</div>
+
 
     <!-- Restock History Section -->
-    <div id="restock-history-section" class="section" style="display: none;">
-      <h2>Restock History</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Supplier</th>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Date & Time</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody id="restockHistoryTable"></tbody>
-      </table>
+    <!-- Restock History Section -->
+<div id="restock-history-section" class="section" style="display: none;">
+  <h2>Restock History</h2>
+  
+  <div class="form-section">
+    <h3>Search & Filter</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="searchSupplier">Search by Supplier/Product</label>
+        <input type="text" id="searchSupplier" placeholder="Enter supplier or product name" />
+      </div>
+      <div class="form-group">
+        <label for="restockFromDate">From Date</label>
+        <input type="date" id="restockFromDate" />
+      </div>
+      <div class="form-group">
+        <label for="restockToDate">To Date</label>
+        <input type="date" id="restockToDate" />
+      </div>
     </div>
+    <button class="btn btn-primary" onclick="filterRestockHistory()">Search</button>
+    <button class="btn btn-secondary" onclick="resetRestockFilter()">Reset</button>
   </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Date & Time</th>
+          <th>Notes</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="restockHistoryTable"></tbody>
+    </table>
+  </div>
+</div>
+
 
   <!-- Confirmation Modal -->
   <div id="confirmModal" class="modal" style="display: none;">
