@@ -499,6 +499,27 @@ function refreshSalesHistory() {
 }
 
 //============ FIX DATE FILTER ============
+function parseISTStringToTimestamp(istString) {
+  // Example assumes format "DD/MM/YYYY, HH:MM:SS AM/PM"
+  // Adjust regex and parsing as needed
+  if (!istString) return NaN;
+  const [datePart, timePart] = istString.split(',');
+  if (!datePart || !timePart) return NaN;
+
+  const [day, month, year] = datePart.trim().split('/').map(Number);
+  const [time, ampm] = timePart.trim().split(' ');
+  let [hours, minutes, seconds] = time.split(':').map(Number);
+
+  if (ampm === 'PM' && hours < 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+
+  // Create a Date object in IST timezone by shifting to UTC
+  // IST is UTC +5:30, so subtract 5.5 hours to get UTC time
+  const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes - 30, seconds));
+
+  return utcDate.getTime();
+}
+
 
 async function filterSalesHistory() {
   const searchText = document.getElementById('searchCustomer').value.toLowerCase();
@@ -518,14 +539,15 @@ async function filterSalesHistory() {
 
   // Filter by date range - FIX: Parse dates correctly
   if (fromDateStr || toDateStr) {
-    const fromTime = fromDateStr ? new Date(fromDateStr).getTime() : 0;
-    const toTime = toDateStr ? new Date(toDateStr).getTime() + 86400000 : Date.now(); // Add 1 day to include end date
+   const fromTime = fromDateStr ? new Date(fromDateStr).getTime() : 0;
+   const toTime = toDateStr ? new Date(toDateStr).getTime() + 86399999 : Date.now();
 
-    filtered = filtered.filter(sale => {
-      if (!sale.timestamp) return false;
-      const saleTime = new Date(sale.timestamp).getTime();
-      return saleTime >= fromTime && saleTime <= toTime;
-    });
+   filtered = filtered.filter(item => {
+      if (!item.timestamp) return false;
+      const itemTime = parseISTStringToTimestamp(item.timestamp);
+      return itemTime >= fromTime && itemTime <= toTime;
+});
+
   }
 
   renderSalesTable(filtered);
@@ -557,13 +579,14 @@ async function filterRestockHistory() {
   // Filter by date range - FIX: Parse dates correctly
   if (fromDateStr || toDateStr) {
     const fromTime = fromDateStr ? new Date(fromDateStr).getTime() : 0;
-    const toTime = toDateStr ? new Date(toDateStr).getTime() + 86400000 : Date.now(); // Add 1 day to include end date
+    const toTime = toDateStr ? new Date(toDateStr).getTime() + 86399999 : Date.now();
 
-    filtered = filtered.filter(restock => {
-      if (!restock.timestamp) return false;
-      const restockTime = new Date(restock.timestamp).getTime();
-      return restockTime >= fromTime && restockTime <= toTime;
-    });
+    filtered = filtered.filter(item => {
+      if (!item.timestamp) return false;
+      const itemTime = parseISTStringToTimestamp(item.timestamp);
+      return itemTime >= fromTime && itemTime <= toTime;
+});
+
   }
 
   renderRestockTable(filtered);
