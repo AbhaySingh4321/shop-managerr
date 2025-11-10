@@ -498,7 +498,7 @@ function refreshSalesHistory() {
   renderSalesTable(appData.sales);
 }
 
-/ ============ FIX DATE FILTER ============
+//============ FIX DATE FILTER ============
 
 async function filterSalesHistory() {
   const searchText = document.getElementById('searchCustomer').value.toLowerCase();
