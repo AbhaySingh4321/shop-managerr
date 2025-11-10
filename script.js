@@ -732,32 +732,6 @@ function refreshRestockHistory() {
   renderRestockTable(appData.restock);
 }
 
-async function filterRestockHistory() {
-  const searchText = document.getElementById('searchSupplier').value.toLowerCase();
-  const fromDate = document.getElementById('restockFromDate').value;
-  const toDate = document.getElementById('restockToDate').value;
-
-  let filtered = appData.restock;
-
-  if (searchText) {
-    filtered = filtered.filter(restock => {
-      const product = appData.products.find(p => p.id == restock.product_id);
-      const productName = product ? product.name.toLowerCase() : '';
-      return restock.supplier_name.toLowerCase().includes(searchText) || productName.includes(searchText);
-    });
-  }
-
-  if (fromDate || toDate) {
-    const from = fromDate ? new Date(fromDate + 'T00:00:00Z').getTime() : 0;
-    const to = toDate ? new Date(toDate + 'T23:59:59Z').getTime() : Date.now();
-    filtered = filtered.filter(restock => {
-      const restockTime = new Date(restock.timestamp).getTime();
-      return restockTime >= from && restockTime <= to;
-    });
-  }
-
-  renderRestockTable(filtered);
-}
 
 function resetRestockFilter() {
   document.getElementById('searchSupplier').value = '';
@@ -765,6 +739,56 @@ function resetRestockFilter() {
   document.getElementById('restockToDate').value = '';
   refreshRestockHistory();
 }
+let restocksToAddList = [];
+
+function addRestockItemToList() {
+  const supplierName = document.getElementById('supplierName').value.trim();
+  const productId = document.getElementById('restockProduct').value;
+  const quantity = parseInt(document.getElementById('restockQuantity').value);
+  const notes = document.getElementById('restockNotes').value.trim();
+
+  if (!supplierName || !productId || quantity <= 0) {
+    alert('Please fill all required fields');
+    return;
+  }
+
+  const product = appData.products.find(p => p.id == productId);
+  if (!product) {
+    alert('Product not found');
+    return;
+  }
+
+  restocksToAddList.push({
+    supplier_name: supplierName,
+    product_id: productId,
+    product_name: product.name,
+    quantity,
+    notes
+  });
+
+  document.getElementById('supplierName').value = '';
+  document.getElementById('restockProduct').value = '';
+  document.getElementById('restockQuantity').value = '';
+  document.getElementById('restockNotes').value = '';
+
+  refreshRestockItemsToAddTable();
+}
+function refreshRestockItemsToAddTable() {
+  const table = document.getElementById('restockItemsToAddTable');
+  table.innerHTML = '';
+  restocksToAddList.forEach((restock, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${restock.supplier_name}</td>
+      <td>${restock.product_name}</td>
+      <td>${restock.quantity}</td>
+      <td>${restock.notes || '-'}</td>
+      <td><button class="btn btn-danger" onclick="removeRestockFromList(${index})">Remove</button></td>
+    `;
+    table.appendChild(row);
+  });
+}
+
 
 function confirmDeleteRestock(id, productId, quantity) {
   pendingAction = () => deleteRestock(id, productId, quantity);
