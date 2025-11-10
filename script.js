@@ -567,7 +567,6 @@ function refreshRestockForm() {
   });
 }
 
-let productsToAddList = [];
 
 function addProductToList() {
   const name = document.getElementById('productName').value.trim();
