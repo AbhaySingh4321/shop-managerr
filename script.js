@@ -392,6 +392,27 @@ async function handleRecordSale(event) {
     document.getElementById('saleError').textContent = 'Error: ' + e.message;
   }
 }
+// ============ PRODUCT SEARCH IN RECORD SALE ============
+
+function setupProductSearch() {
+  const searchInput = document.getElementById('saleProductSearch');
+  const selectDropdown = document.getElementById('saleProduct');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const searchTerm = searchInput.value.toLowerCase();
+      
+      // Hide/show options based on search
+      Array.from(selectDropdown.options).forEach(option => {
+        if (option.value === '') {
+          option.style.display = '';
+        } else {
+          option.style.display = option.textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
+        }
+      });
+    });
+  }
+}
 
 // ============ Sales History ============
 
