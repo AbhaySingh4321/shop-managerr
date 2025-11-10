@@ -79,47 +79,69 @@
     </div>
 
     <!-- Inventory Section -->
-    <div id="inventory-section" class="section" style="display: none;">
-      <h2>Manage Inventory</h2>
-      <div class="form-section">
-        <h3>Add Product</h3>
-        <form id="addProductForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="productName">Product Name</label>
-              <input type="text" id="productName" placeholder="e.g., Rice" required />
-            </div>
-            <div class="form-group">
-              <label for="productStock">Stock</label>
-              <input type="number" id="productStock" placeholder="0" min="0" required />
-            </div>
-            <div class="form-group">
-              <label for="productUnit">Unit</label>
-              <input type="text" id="productUnit" placeholder="e.g., kg" required />
-            </div>
-            <div class="form-group">
-              <label for="productPrice">Price</label>
-              <input type="number" id="productPrice" placeholder="0" min="0" step="0.01" />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Product</button>
-          <p class="success-msg" id="addProductMsg"></p>
-        </form>
+    <!-- Inventory Section -->
+<div id="inventory-section" class="section" style="display: none;">
+  <h2>Manage Inventory</h2>
+  <div class="form-section">
+    <h3>Add Product</h3>
+    <form id="singleProductForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productName">Product Name</label>
+          <input type="text" id="productName" placeholder="e.g., Rice" required />
+        </div>
+        <div class="form-group">
+          <label for="productStock">Stock</label>
+          <input type="number" id="productStock" placeholder="0" min="0" required />
+        </div>
+        <div class="form-group">
+          <label for="productUnit">Unit</label>
+          <input type="text" id="productUnit" placeholder="e.g., kg" required />
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Price</label>
+          <input type="number" id="productPrice" placeholder="0" min="0" step="0.01" />
+        </div>
       </div>
-      <h3>Products</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Product Name</th>
-            <th>Stock</th>
-            <th>Unit</th>
-            <th>Price</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="productsTable"></tbody>
-      </table>
-    </div>
+      <button type="button" class="btn btn-primary" onclick="addProductToList()">Add Product</button>
+    </form>
+  </div>
+
+  <!-- Products to be added in batch -->
+  <div class="form-section">
+    <h3>Products to Add</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Stock</th>
+          <th>Unit</th>
+          <th>Price</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="productsToAddTable"></tbody>
+    </table>
+    <button class="btn btn-primary" onclick="submitAllProducts()" style="margin-top: 15px;">Save All Products</button>
+  </div>
+
+  <h3 style="margin-top: 30px;">Existing Products</h3>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Stock</th>
+          <th>Unit</th>
+          <th>Price</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="productsTable"></tbody>
+    </table>
+  </div>
+</div>
+
 
     <!-- Record Sale Section -->
     <!-- Record Sale Section -->
@@ -177,35 +199,54 @@
 
 
     <!-- Add Stock Section -->
-    <div id="restock-section" class="section" style="display: none;">
-      <h2>Add/Restock Stock</h2>
-      <div class="form-section">
-        <form id="addStockForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="supplierName">Supplier Name</label>
-              <input type="text" id="supplierName" placeholder="Enter supplier name" required />
-            </div>
-            <div class="form-group">
-              <label for="restockProduct">Product</label>
-              <select id="restockProduct" required>
-                <option value="">Select product</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="restockQuantity">Quantity</label>
-              <input type="number" id="restockQuantity" placeholder="0" min="1" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="restockNotes">Notes</label>
-            <textarea id="restockNotes" placeholder="Add notes..."></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Stock</button>
-          <p class="success-msg" id="restockSuccess"></p>
-        </form>
+    <!-- Add Stock Section -->
+<div id="restock-section" class="section" style="display: none;">
+  <h2>Add/Restock Stock</h2>
+  <div class="form-section">
+    <h3>Add Restock Items</h3>
+    <form id="singleRestockForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="supplierName">Supplier Name</label>
+          <input type="text" id="supplierName" placeholder="Enter supplier name" required />
+        </div>
+        <div class="form-group">
+          <label for="restockProduct">Product</label>
+          <select id="restockProduct" required>
+            <option value="">Select product</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="restockQuantity">Quantity</label>
+          <input type="number" id="restockQuantity" placeholder="0" min="1" required />
+        </div>
       </div>
-    </div>
+      <div class="form-group">
+        <label for="restockNotes">Notes</label>
+        <textarea id="restockNotes" placeholder="Add notes..."></textarea>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addRestockItemToList()">Add Item</button>
+    </form>
+  </div>
+
+  <!-- Restock items to be added -->
+  <div class="form-section">
+    <h3>Items to Restock</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Notes</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="restockItemsToAddTable"></tbody>
+    </table>
+    <button class="btn btn-primary" onclick="submitAllRestocks()" style="margin-top: 15px;">Save All Restocks</button>
+  </div>
+</div>
 
     <!-- Sales History Section -->
     <!-- Sales History Section -->
