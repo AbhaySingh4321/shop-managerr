@@ -239,8 +239,9 @@ function refreshInventory() {
   });
 }
 
-async function handleAddProduct(event) {
-  event.preventDefault();
+let productsToAddList = [];
+
+function addProductToList() {
   const name = document.getElementById('productName').value.trim();
   const stock = parseInt(document.getElementById('productStock').value);
   const unit = document.getElementById('productUnit').value.trim();
@@ -250,17 +251,56 @@ async function handleAddProduct(event) {
     alert('Please fill all required fields correctly');
     return;
   }
+  productsToAddList.push({ name, stock, unit, price });
 
-  const { error } = await supabase.from('products').insert([{ name, stock, unit, price }]);
-  if (error) alert('Failed to add product: ' + error.message);
-  else {
-    document.getElementById('addProductMsg').textContent = '✓ Product added!';
-    event.target.reset();
-    setTimeout(() => {
-      document.getElementById('addProductMsg').textContent = '';
-    }, 3000);
+  // Clear form
+  document.getElementById('productName').value = '';
+  document.getElementById('productStock').value = '';
+  document.getElementById('productUnit').value = '';
+  document.getElementById('productPrice').value = '';
+
+  refreshProductsToAddTable();
+}
+
+function removeProductFromList(index) {
+  productsToAddList.splice(index, 1);
+  refreshProductsToAddTable();
+}
+
+function refreshProductsToAddTable() {
+  const table = document.getElementById('productsToAddTable');
+  table.innerHTML = '';
+  productsToAddList.forEach((product, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${product.name}</td>
+      <td>${product.stock}</td>
+      <td>${product.unit}</td>
+      <td>₹${product.price.toFixed(2)}</td>
+      <td><button class="btn btn-danger" onclick="removeProductFromList(${index})">Remove</button></td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+async function submitAllProducts() {
+  if (productsToAddList.length === 0) {
+    alert('Please add at least one product');
+    return;
+  }
+
+  try {
+    for (const product of productsToAddList) {
+      await supabase.from('products').insert([product]);
+    }
+    alert(`✓ ${productsToAddList.length} product(s) added successfully!`);
+    productsToAddList = [];
+    refreshProductsToAddTable();
+  } catch (e) {
+    alert('Error adding products: ' + e.message);
   }
 }
+
 
 function confirmDeleteProduct(id, name) {
   pendingAction = () => deleteProduct(id, name);
