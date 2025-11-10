@@ -788,6 +788,35 @@ function refreshRestockItemsToAddTable() {
     table.appendChild(row);
   });
 }
+async function submitAllRestocks() {
+  if (restocksToAddList.length === 0) {
+    alert('Please add at least one restock item');
+    return;
+  }
+
+  try {
+    for (const restock of restocksToAddList) {
+      const product = appData.products.find(p => p.id == restock.product_id);
+      if (!product) continue;
+
+      await supabase.from('products').update({ stock: product.stock + restock.quantity }).eq('id', restock.product_id);
+
+      await supabase.from('restock').insert([{
+        supplier_name: restock.supplier_name,
+        product_id: restock.product_id,
+        quantity: restock.quantity,
+        notes: restock.notes,
+        timestamp: new Date().toISOString()
+      }]);
+    }
+
+    alert(`✓ ${restocksToAddList.length} restock(s) completed!`);
+    restocksToAddList = [];
+    refreshRestockItemsToAddTable();
+  } catch (e) {
+    alert('Error adding restocks: ' + e.message);
+  }
+}
 
 
 function confirmDeleteRestock(id, productId, quantity) {
