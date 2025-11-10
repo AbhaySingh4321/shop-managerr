@@ -251,6 +251,21 @@ function addProductToList() {
     alert('Please fill all required fields correctly');
     return;
   }
+
+  // Check against already-added products in database
+  const isDuplicateDb = appData.products.some(prod =>
+    prod.name.trim().toLowerCase() === name.toLowerCase()
+  );
+  // Check against unsubmitted add-list items
+  const isDuplicateQueued = productsToAddList.some(prod =>
+    prod.name.trim().toLowerCase() === name.toLowerCase()
+  );
+
+  if (isDuplicateDb || isDuplicateQueued) {
+    alert('Product with this name already exists!');
+    return;
+  }
+
   productsToAddList.push({ name, stock, unit, price });
 
   // Clear form
@@ -261,6 +276,7 @@ function addProductToList() {
 
   refreshProductsToAddTable();
 }
+
 
 function removeProductFromList(index) {
   productsToAddList.splice(index, 1);
@@ -551,38 +567,68 @@ function refreshRestockForm() {
   });
 }
 
-async function handleAddStock(event) {
-  event.preventDefault();
-  const supplierName = document.getElementById('supplierName').value.trim();
-  const productId = document.getElementById('restockProduct').value;
-  const quantity = parseInt(document.getElementById('restockQuantity').value);
-  const notes = document.getElementById('restockNotes').value.trim();
+let productsToAddList = [];
 
-  if (!supplierName || !productId || quantity <= 0) {
-    alert('Please fill all required fields.');
+function addProductToList() {
+  const name = document.getElementById('productName').value.trim();
+  const stock = parseInt(document.getElementById('productStock').value);
+  const unit = document.getElementById('productUnit').value.trim();
+  const price = parseFloat(document.getElementById('productPrice').value) || 0;
+
+  if (!name || !unit || stock < 0) {
+    alert('Please fill all required fields correctly');
     return;
   }
+  productsToAddList.push({ name, stock, unit, price });
 
-  const product = appData.products.find(p => String(p.id) === String(productId));
-  if (!product) {
-    alert('Selected product not found.');
+  // Clear form
+  document.getElementById('productName').value = '';
+  document.getElementById('productStock').value = '';
+  document.getElementById('productUnit').value = '';
+  document.getElementById('productPrice').value = '';
+
+  refreshProductsToAddTable();
+}
+
+function removeProductFromList(index) {
+  productsToAddList.splice(index, 1);
+  refreshProductsToAddTable();
+}
+
+function refreshProductsToAddTable() {
+  const table = document.getElementById('productsToAddTable');
+  table.innerHTML = '';
+  productsToAddList.forEach((product, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${product.name}</td>
+      <td>${product.stock}</td>
+      <td>${product.unit}</td>
+      <td>₹${product.price.toFixed(2)}</td>
+      <td><button class="btn btn-danger" onclick="removeProductFromList(${index})">Remove</button></td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+async function submitAllProducts() {
+  if (productsToAddList.length === 0) {
+    alert('Please add at least one product');
     return;
   }
 
   try {
-    await supabase.from('products').update({ stock: product.stock + quantity }).eq('id', productId);
-    await supabase.from('restock').insert([{ supplier_name: supplierName, product_id: productId, quantity, notes }]);
-
-    document.getElementById('restockSuccess').textContent = '✓ Stock added!';
-    event.target.reset();
-
-    setTimeout(() => {
-      document.getElementById('restockSuccess').textContent = '';
-    }, 3000);
+    for (const product of productsToAddList) {
+      await supabase.from('products').insert([product]);
+    }
+    alert(`✓ ${productsToAddList.length} product(s) added successfully!`);
+    productsToAddList = [];
+    refreshProductsToAddTable();
   } catch (e) {
-    alert('Error adding stock: ' + e.message);
+    alert('Error adding products: ' + e.message);
   }
 }
+
 
 function renderRestockTable(restocks) {
   const table = document.getElementById('restockHistoryTable');
