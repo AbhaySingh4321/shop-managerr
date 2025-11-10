@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupEventListeners() {
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
-  document.getElementById('addProductForm').addEventListener('submit', handleAddProduct);
+  //document.getElementById('addProductForm').addEventListener('submit', handleAddProduct);
   document.getElementById('recordSaleForm').addEventListener('submit', handleRecordSale);
   document.getElementById('addStockForm').addEventListener('submit', handleAddStock);
 }
