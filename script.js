@@ -28,7 +28,7 @@ function setupEventListeners() {
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
   //document.getElementById('addProductForm').addEventListener('submit', handleAddProduct);
   document.getElementById('recordSaleForm').addEventListener('submit', handleRecordSale);
-  document.getElementById('addStockForm').addEventListener('submit', handleAddStock);
+  //document.getElementById('addStockForm').addEventListener('submit', handleAddStock);
 }
 
 function setupAuthListener() {
@@ -498,13 +498,16 @@ function refreshSalesHistory() {
   renderSalesTable(appData.sales);
 }
 
-// Filtering
+/ ============ FIX DATE FILTER ============
+
 async function filterSalesHistory() {
   const searchText = document.getElementById('searchCustomer').value.toLowerCase();
-  const fromDate = document.getElementById('searchFromDate').value;
-  const toDate = document.getElementById('searchToDate').value;
+  const fromDateStr = document.getElementById('searchFromDate').value;
+  const toDateStr = document.getElementById('searchToDate').value;
+
   let filtered = appData.sales;
 
+  // Filter by customer/product name
   if (searchText) {
     filtered = filtered.filter(sale => {
       const product = appData.products.find(p => p.id == sale.product_id);
@@ -513,18 +516,91 @@ async function filterSalesHistory() {
     });
   }
 
-  if (fromDate || toDate) {
-    const from = fromDate ? new Date(fromDate + 'T00:00:00Z').getTime() : 0;
-    const to = toDate ? new Date(toDate + 'T23:59:59Z').getTime() : Date.now();
+  // Filter by date range - FIX: Parse dates correctly
+  if (fromDateStr || toDateStr) {
+    const fromTime = fromDateStr ? new Date(fromDateStr).getTime() : 0;
+    const toTime = toDateStr ? new Date(toDateStr).getTime() + 86400000 : Date.now(); // Add 1 day to include end date
+
     filtered = filtered.filter(sale => {
+      if (!sale.timestamp) return false;
       const saleTime = new Date(sale.timestamp).getTime();
-      return saleTime >= from && saleTime <= to;
+      return saleTime >= fromTime && saleTime <= toTime;
     });
   }
 
   renderSalesTable(filtered);
 }
 
+function resetSalesFilter() {
+  document.getElementById('searchCustomer').value = '';
+  document.getElementById('searchFromDate').value = '';
+  document.getElementById('searchToDate').value = '';
+  refreshSalesHistory();
+}
+
+async function filterRestockHistory() {
+  const searchText = document.getElementById('searchSupplier').value.toLowerCase();
+  const fromDateStr = document.getElementById('restockFromDate').value;
+  const toDateStr = document.getElementById('restockToDate').value;
+
+  let filtered = appData.restock;
+
+  // Filter by supplier/product name
+  if (searchText) {
+    filtered = filtered.filter(restock => {
+      const product = appData.products.find(p => p.id == restock.product_id);
+      const productName = product ? product.name.toLowerCase() : '';
+      return restock.supplier_name.toLowerCase().includes(searchText) || productName.includes(searchText);
+    });
+  }
+
+  // Filter by date range - FIX: Parse dates correctly
+  if (fromDateStr || toDateStr) {
+    const fromTime = fromDateStr ? new Date(fromDateStr).getTime() : 0;
+    const toTime = toDateStr ? new Date(toDateStr).getTime() + 86400000 : Date.now(); // Add 1 day to include end date
+
+    filtered = filtered.filter(restock => {
+      if (!restock.timestamp) return false;
+      const restockTime = new Date(restock.timestamp).getTime();
+      return restockTime >= fromTime && restockTime <= toTime;
+    });
+  }
+
+  renderRestockTable(filtered);
+}
+
+function resetRestockFilter() {
+  document.getElementById('searchSupplier').value = '';
+  document.getElementById('restockFromDate').value = '';
+  document.getElementById('restockToDate').value = '';
+  refreshRestockHistory();
+}
+
+// ============ UPDATE SALE FORM DROPDOWN ============
+
+function refreshSaleForm() {
+  const select = document.getElementById('saleProduct');
+  select.innerHTML = '<option value="">Select product</option>';
+  appData.products.filter(p => p.stock > 0).forEach(product => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    option.textContent = `${product.name} (${product.stock} ${product.unit})`;
+    select.appendChild(option);
+  });
+  setupProductSearch(); // Enable search
+}
+// ============ UPDATE RESTOCK FORM DROPDOWN ============
+
+function updateRestockProductDropdown() {
+  const select = document.getElementById('restockProduct');
+  select.innerHTML = '<option value="">Select product</option>';
+  appData.products.forEach(product => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    option.textContent = product.name;
+    select.appendChild(option);
+  });
+}
 function resetSalesFilter() {
   document.getElementById('searchCustomer').value = '';
   document.getElementById('searchFromDate').value = '';
